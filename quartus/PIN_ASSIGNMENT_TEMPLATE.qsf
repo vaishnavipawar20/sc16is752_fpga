@@ -1,0 +1,20 @@
+# Board-specific pin assignment template
+# This file is a template only. It must be replaced or edited with verified pin numbers.
+# The exact device name and package should be checked in Quartus before programming.
+
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE6E22C8
+set_global_assignment -name TOP_LEVEL_ENTITY sc16is752_fpga_top
+
+# TODO: Replace these with verified board assignments.
+# set_location_assignment PIN_XXX -to clk
+# set_location_assignment PIN_YYY -to reset_n
+# set_location_assignment PIN_ZZZ -to spi_cs_n
+# set_location_assignment PIN_AAA -to spi_sclk
+# set_location_assignment PIN_BBB -to spi_mosi
+# set_location_assignment PIN_CCC -to spi_miso
+# set_location_assignment PIN_DDD -to txa
+# set_location_assignment PIN_EEE -to rxa
+# set_location_assignment PIN_FFF -to txb
+# set_location_assignment PIN_GGG -to rxb
+# set_location_assignment PIN_HHH -to irq_n

@@ -1,0 +1,8 @@
+# Quartus project configuration
+
+# This is the project file for Quartus II 13.0 SP1.
+# The top-level entity can be changed as needed.
+# Board-specific pin assignments are intentionally TODO placeholders.
+
+QUARTUS_VERSION = "13.0 SP1"
+PROJECT_REVISION = "sc16is752_fpga"

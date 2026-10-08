@@ -1,0 +1,46 @@
+`timescale 1ns / 1ps
+
+module tb_sc16is752_loopback;
+
+    reg clk;
+    reg reset_n;
+    reg spi_cs_n;
+    reg spi_sclk;
+    reg spi_mosi;
+    wire spi_miso;
+
+    sc16is752_fpga_top dut (
+        .clk(clk),
+        .reset_n(reset_n),
+        .spi_cs_n(spi_cs_n),
+        .spi_sclk(spi_sclk),
+        .spi_mosi(spi_mosi),
+        .spi_miso(spi_miso),
+        .txa(),
+        .rxa(1'b1),
+        .rtsa(),
+        .ctsa(1'b1),
+        .txb(),
+        .rxb(1'b1),
+        .rtsb(),
+        .ctsb(1'b1),
+        .gpio(),
+        .irq_n()
+    );
+
+    initial begin
+        clk = 1'b0;
+        reset_n = 1'b0;
+        spi_cs_n = 1'b1;
+        spi_sclk = 1'b0;
+        spi_mosi = 1'b0;
+        #30 reset_n = 1'b1;
+        #200;
+        $display("Loopback tb placeholder complete");
+        $finish;
+    end
+
+    always #5 clk = ~clk;
+    always #10 spi_sclk = ~spi_sclk;
+
+endmodule

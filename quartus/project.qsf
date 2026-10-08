@@ -1,0 +1,38 @@
+# Quartus project settings
+
+# This file is intentionally conservative and project-oriented.
+# Real board pin assignments must be filled in before programming hardware.
+
+set_global_assignment -name FAMILY "Cyclone IV E"
+set_global_assignment -name DEVICE EP4CE6E22C8
+set_global_assignment -name TOP_LEVEL_ENTITY sc16is752_fpga_top
+
+# Project files
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_reset.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_fifo.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_baudgen.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_uart_tx.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_uart_rx.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_uart_channel.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_register_file.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_spi_slave.v
+set_global_assignment -name VERILOG_FILE ../rtl/sc16is752_fpga_top.v
+set_global_assignment -name VERILOG_FILE ../rtl/ep4ce6_board_top.v
+
+# Optional: enable EDA simulation settings if desired
+# set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+
+# Board-specific pin assignments are intentionally left as TODO.
+# Replace the placeholders below with the actual FPGA pins from the board schematic.
+# Example:
+# set_location_assignment PIN_XX -to clk
+# set_location_assignment PIN_YY -to reset_n
+# set_location_assignment PIN_ZZ -to spi_cs_n
+# set_location_assignment PIN_AA -to spi_sclk
+# set_location_assignment PIN_AB -to spi_mosi
+# set_location_assignment PIN_AC -to spi_miso
+# set_location_assignment PIN_AD -to txa
+# set_location_assignment PIN_AE -to rxa
+# set_location_assignment PIN_AF -to irq_n
+
+# NOTE: Do not fabricate pin numbers. Keep them as TODO until verified.
