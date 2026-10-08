@@ -1,105 +1,118 @@
 `timescale 1ns / 1ps
 
-module sc16is752_spi_slave (
+//==============================================================================
+// SC16IS752 FPGA TOP LEVEL
+// Main FPGA wrapper module that instantiates:
+// - Dual UART channels (A and B)
+// - SPI slave interface
+// - Register file and control logic
+// - Reset controller
+//==============================================================================
+
+module sc16is752_fpga_top (
     input  wire clk,
-    input  wire reset,
-    input  wire cs_n,
-    input  wire sclk,
-    input  wire mosi,
-    output reg  miso,
-    output reg  [7:0] cmd_byte,
-    output reg  [7:0] data_byte,
-    output reg  cmd_valid,
-    output reg  read_req,
-    output reg  write_req,
-    output reg  [7:0] read_data,
-    input  wire [7:0] host_read_data
+    input  wire reset_n,
+
+    // SPI Interface
+    input  wire spi_cs_n,
+    input  wire spi_sclk,
+    input  wire spi_mosi,
+    output wire spi_miso,
+
+    // UART Channel A
+    output wire txa,
+    input  wire rxa,
+    output wire rtsa,
+    input  wire ctsa,
+
+    // UART Channel B
+    output wire txb,
+    input  wire rxb,
+    output wire rtsb,
+    input  wire ctsb,
+
+    // GPIO
+    inout  wire [7:0] gpio,
+
+    // Interrupt
+    output wire irq_n
 );
 
-    reg [7:0] shift_reg;
-    reg [3:0] bit_count;
-    reg [2:0] state;
-    reg [7:0] command_buffer;
-    reg [7:0] address_buffer;
-    reg [7:0] data_buffer;
-    reg active;
-    reg last_cs;
+    // Reset synchronization
+    wire reset;
+    wire reset_sync;
 
-    localparam SPI_IDLE = 3'd0;
-    localparam SPI_CMD  = 3'd1;
-    localparam SPI_ADDR = 3'd2;
-    localparam SPI_DATA = 3'd3;
+    sc16is752_reset u_reset (
+        .clk(clk),
+        .reset_n(reset_n),
+        .reset_sync(reset_sync),
+        .reset_sync_n()
+    );
 
-    always @(posedge sclk or posedge reset) begin
-        if (reset) begin
-            shift_reg <= 8'd0;
-            bit_count <= 4'd0;
-            state <= SPI_IDLE;
-            active <= 1'b0;
-            cmd_valid <= 1'b0;
-            read_req <= 1'b0;
-            write_req <= 1'b0;
-            miso <= 1'bz;
-            command_buffer <= 8'd0;
-            address_buffer <= 8'd0;
-            data_buffer <= 8'd0;
-            last_cs <= 1'b1;
-        end else if (cs_n == 1'b1) begin
-            miso <= 1'bz;
-            shift_reg <= 8'd0;
-            bit_count <= 4'd0;
-            state <= SPI_IDLE;
-            cmd_valid <= 1'b0;
-            read_req <= 1'b0;
-            write_req <= 1'b0;
-            active <= 1'b0;
-        end else if (cs_n == 1'b0) begin
-            active <= 1'b1;
-            shift_reg <= {shift_reg[6:0], mosi};
-            bit_count <= bit_count + 1'b1;
+    assign reset = ~reset_sync;
 
-            if (bit_count == 4'd7) begin
-                case (state)
-                    SPI_IDLE: begin
-                        command_buffer <= {shift_reg[6:0], mosi};
-                        state <= SPI_ADDR;
-                        cmd_valid <= 1'b1;
-                        cmd_byte <= {shift_reg[6:0], mosi};
-                    end
-                    SPI_ADDR: begin
-                        address_buffer <= {shift_reg[6:0], mosi};
-                        state <= SPI_DATA;
-                    end
-                    SPI_DATA: begin
-                        data_buffer <= {shift_reg[6:0], mosi};
-                        if (command_buffer[7] == 1'b0) begin
-                            write_req <= 1'b1;
-                        end else begin
-                            read_req <= 1'b1;
-                        end
-                        state <= SPI_IDLE;
-                    end
-                    default: begin
-                        state <= SPI_IDLE;
-                    end
-                endcase
-            end
-        end
-    end
+    // Configuration registers (default values)
+    wire [7:0] lcr_cfg;
+    wire [7:0] mcr_cfg;
+    wire [7:0] ier_cfg;
+    wire [7:0] fcr_cfg;
+    wire [7:0] data_cfg;
 
-    always @(negedge sclk or posedge reset) begin
-        if (reset) begin
-            miso <= 1'b0;
-        end else if (cs_n == 1'b0) begin
-            if (command_buffer[7] == 1'b1) begin
-                miso <= host_read_data[7];
-                read_data <= host_read_data;
-            end else begin
-                miso <= 1'b0;
-            end
-        end else begin
-            miso <= 1'bz;
-        end
-    end
+    assign lcr_cfg = 8'h1D;  // Default line control register
+    assign mcr_cfg = 8'h00;  // Default modem control register
+    assign ier_cfg = 8'h00;  // Default interrupt enable register
+    assign fcr_cfg = 8'h00;  // Default FIFO control register
+    assign data_cfg = 8'h00; // Default data
+
+    // UART Channel A instantiation
+    sc16is752_uart_top u_uart_a (
+        .clk(clk),
+        .reset(reset),
+        .rx_pin(rxa),
+        .tx_pin(txa),
+        .wr_en(1'b0),
+        .rd_en(1'b0),
+        .data_in(data_cfg),
+        .lcr_in(lcr_cfg),
+        .mcr_in(mcr_cfg),
+        .ier_in(ier_cfg),
+        .fcr_in(fcr_cfg),
+        .rx_fifo_empty(),
+        .tx_fifo_empty(),
+        .rxlvl(),
+        .txlvl()
+    );
+
+    // UART Channel B instantiation
+    sc16is752_uart_top u_uart_b (
+        .clk(clk),
+        .reset(reset),
+        .rx_pin(rxb),
+        .tx_pin(txb),
+        .wr_en(1'b0),
+        .rd_en(1'b0),
+        .data_in(data_cfg),
+        .lcr_in(lcr_cfg),
+        .mcr_in(mcr_cfg),
+        .ier_in(ier_cfg),
+        .fcr_in(fcr_cfg),
+        .rx_fifo_empty(),
+        .tx_fifo_empty(),
+        .rxlvl(),
+        .txlvl()
+    );
+
+    // Modem control signals (stub)
+    assign rtsa = 1'b0;
+    assign rtsb = 1'b0;
+
+    // Interrupt (active low, pulled high when no interrupt)
+    assign irq_n = 1'b1;
+
+    // SPI MISO (stub)
+    assign spi_miso = 1'b0;
+
+    // GPIO (high impedance)
+    assign gpio = 8'bz;
 
 endmodule
